@@ -1,0 +1,37 @@
+{
+  "hints": [
+    {
+      "name": "file-system.factory.keys",
+      "values": [
+        { "value": "ftp" },
+        { "value": "sftp" },
+        { "value": "fdfs" },
+        { "value": "fastdfs" }
+      ],
+      "providers": [
+        { "name": "any" }
+      ]
+    },
+    {
+      "name": "file-system.factory.values",
+      "providers": [
+        { "name": "class-reference" }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "sourceType": "moe.icyr.spring.starter.filesystem.entity.FileSystemProfile",
+      "type": "moe.icyr.spring.starter.filesystem.entity.FileSystemProfile",
+      "name": "file-system"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "moe.icyr.spring.starter.filesystem.entity.FileSystemProfile",
+      "type": "java.util.Map",
+      "name": "file-system.factory",
+      "description": "Map of the factory classes."
+    }
+  ]
+}

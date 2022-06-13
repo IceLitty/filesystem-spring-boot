@@ -1,0 +1,359 @@
+package moe.icyr.spring.starter.filesystem.sftp;
+
+import com.jcraft.jsch.*;
+import moe.icyr.spring.starter.filesystem.api.FileSystem;
+import moe.icyr.spring.starter.filesystem.api.entity.FileInfo;
+import moe.icyr.spring.starter.filesystem.api.entity.FileSystemProperty;
+import moe.icyr.spring.starter.filesystem.sftp.entity.SftpProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+/**
+ * SFTP文件服务连接器<br>
+ * <b>无法使用最新的密钥格式登录</b>
+ *
+ * @author IceLitty
+ * @since 1.0
+ */
+@Deprecated
+public class SftpJschFileSystem extends FileSystem {
+
+    private static final Logger log = LoggerFactory.getLogger(SftpJschFileSystem.class);
+    private static final ResourceBundle message = ResourceBundle.getBundle("MessageSftp");
+
+    private SftpProperty property;
+
+    // 首次登陆提示：(ask|yes|no)
+    private static final String SESSION_CONFIG_STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
+
+    private JSch sftpClient;
+    private Session sftpSession;
+    private ChannelSftp sftpChannel;
+
+    /**
+     * 验证配置并创建连接
+     *
+     * @param property 配置文件
+     */
+    public SftpJschFileSystem(FileSystemProperty property) {
+        super(property);
+    }
+
+    @Override
+    public SftpProperty validateProperty(FileSystemProperty property) {
+        super.validateProperty(property);
+        SftpProperty sftpProperty;
+        if (property instanceof SftpProperty) {
+            sftpProperty = (SftpProperty) property;
+        } else {
+            sftpProperty = new SftpProperty(property);
+        }
+        if (sftpProperty.getKeepAliveSecond() == null || sftpProperty.getKeepAliveSecond() < 0) {
+            sftpProperty.setKeepAliveSecond(0);
+        }
+        if (sftpProperty.getPrivateKey() != null) {
+            if (!new File(sftpProperty.getPrivateKey()).exists()) {
+                throw new IllegalArgumentException(message.getString("fs.sftp.connect.fail.private.key.not.found")
+                        .replace("${privKeyPath}", sftpProperty.getPrivateKey()));
+            }
+        }
+        return sftpProperty;
+    }
+
+    @Override
+    protected void init(FileSystemProperty property) {
+        this.property = (SftpProperty) property;
+    }
+
+    @Override
+    protected boolean connect() {
+        if (sftpClient == null) {
+            sftpClient = new JSch();
+        }
+        if (sftpSession == null) {
+            try {
+                sftpSession = sftpClient.getSession(this.property.getUsername(), this.property.getIp(), this.property.getPort());
+            } catch (JSchException ignored) {}
+            sftpSession.setConfig(SESSION_CONFIG_STRICT_HOST_KEY_CHECKING, "no");
+            if (this.property.getKeepAliveSecond() > 0) {
+                try {
+                    sftpSession.setServerAliveInterval(this.property.getKeepAliveSecond() * 1000);
+                } catch (JSchException e) {
+                    log.error(message.getString("fs.sftp.connect.fail.setting.heartbeat")
+                            .replace("${value}", Integer.toString(this.property.getKeepAliveSecond())), e);
+                    return false;
+                }
+            }
+            if (this.property.getPrivateKey() != null && this.property.getPrivateKey().trim().length() > 0) {
+                String pkStr;
+                File file = new File(this.property.getPrivateKey());
+                if (file.exists()) {
+                    try (FileInputStream inputStream = new FileInputStream(file);
+                         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                         BufferedReader reader = new BufferedReader(inputStreamReader)) {
+                        StringBuilder builder = new StringBuilder();
+                        while (true) {
+                            String tmp = reader.readLine();
+                            if (tmp == null) {
+                                break;
+                            }
+                            builder.append(tmp).append("\r");
+                        }
+                        pkStr = builder.toString();
+                        if (builder.length() > 0) {
+                            pkStr = pkStr.substring(0, pkStr.length() - 1);
+                        }
+                    } catch (IOException e) {
+                        log.error(message.getString("fs.sftp.connect.fail.private.key.load")
+                                .replace("${ip}", this.property.getIp())
+                                .replace("${port}", Integer.toString(this.property.getPort())), e);
+                        return false;
+                    }
+                } else {
+                    pkStr = this.property.getPrivateKey();
+                }
+                try {
+                    if (this.property.getPassword() != null && this.property.getPassword().trim().length() > 0) {
+                        sftpClient.addIdentity(null, pkStr.getBytes(StandardCharsets.UTF_8), null, this.property.getPassword().getBytes(StandardCharsets.UTF_8));
+                    } else {
+                        sftpClient.addIdentity(null, pkStr.getBytes(StandardCharsets.UTF_8), null, null);
+                    }
+                } catch (JSchException e) {
+                    log.error(message.getString("fs.sftp.connect.fail.private.key")
+                            .replace("${ip}", this.property.getIp())
+                            .replace("${port}", Integer.toString(this.property.getPort()))
+                            .replace("${username}", this.property.getUsername()), e);
+                    return false;
+                }
+            } else if (this.property.getPassword() != null && this.property.getPassword().trim().length() > 0) {
+                sftpSession.setPassword(this.property.getPassword());
+            } else {
+                log.error(message.getString("fs.sftp.connect.fail.not.support.anonymous"));
+                return false;
+            }
+        }
+        if (!sftpSession.isConnected()) {
+            try {
+                sftpSession.connect(60000);
+                sftpChannel = (ChannelSftp) sftpSession.openChannel("sftp");
+                sftpChannel.connect(60000);
+            } catch (JSchException e) {
+                log.error(message.getString("fs.sftp.connect.fail.login")
+                        .replace("${ip}", this.property.getIp())
+                        .replace("${port}", Integer.toString(this.property.getPort()))
+                        .replace("${username}", this.property.getUsername()), e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void disconnect() {
+        if (null != sftpClient) {
+            if (null != sftpSession) {
+                if (null != sftpChannel && sftpChannel.isConnected()) {
+                    sftpChannel.disconnect();
+                }
+                sftpChannel = null;
+                if (sftpSession.isConnected()) {
+                    sftpSession.disconnect();
+                }
+            }
+            sftpSession = null;
+        }
+        sftpClient = null;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<FileInfo> list(String path, boolean deepFind, boolean flatPrint) {
+        if (path == null || path.trim().length() == 0)
+            return null;
+        path = path.replace("\\", "/");
+        if (sftpChannel == null || !sftpChannel.isConnected()) {
+            if (!connect()) {
+                return null;
+            }
+        }
+        if ("/".equals(path)) {
+            log.warn(message.getString("fs.sftp.list.warn.from.root"));
+        }
+        try {
+            sftpChannel.cd(path);
+            Vector<ChannelSftp.LsEntry> ls = sftpChannel.ls(path);
+            List<FileInfo> files = new ArrayList<>();
+            for (ChannelSftp.LsEntry file : ls) {
+                if (".".equals(file.getFilename()) || "..".equals(file.getFilename())) {
+                    continue;
+                }
+                FileInfo info = new FileInfo();
+                info.setAbsolutePath(path);
+                info.setFilename(file.getFilename());
+                info.setSize(file.getAttrs().getSize());
+                info.setFile(file.getAttrs().isReg());
+                info.setDirectory(file.getAttrs().isDir());
+                files.add(info);
+                if (deepFind && file.getAttrs().isDir()) {
+                    String childPath;
+                    if ("/".equals(path)) {
+                        childPath = "/" + file.getFilename();
+                    } else if (path.endsWith("/")) {
+                        childPath = path + file.getFilename();
+                    } else {
+                        childPath = path + "/" + file.getFilename();
+                    }
+                    Collection<FileInfo> list = list(childPath, true, flatPrint);
+                    if (flatPrint) {
+                        files.addAll(list);
+                    } else {
+                        info.setChildren(list);
+                    }
+                }
+            }
+            return files;
+        } catch (Exception e) {
+            log.error(message.getString("fs.sftp.list.error")
+                    .replace("${path}", path), e);
+            return null;
+        }
+    }
+
+    @Override
+    public boolean upload(InputStream input, String path, String filename) {
+        if (input == null || path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+            return false;
+        if (sftpChannel == null || !sftpChannel.isConnected()) {
+            if (!connect()) {
+                return false;
+            }
+        }
+        boolean cd = createDirectory(path);
+        if (!cd) {
+            return false;
+        }
+        try {
+            int len = input.available();
+            sftpChannel.put(input, filename);
+            log.debug(message.getString("fs.sftp.upload.success")
+                    .replace("${path}", path)
+                    .replace("${filename}", filename)
+                    .replace("${length}", Integer.toString(len)));
+            return true;
+        } catch (Exception e) {
+            log.error(message.getString("fs.sftp.upload.error")
+                    .replace("${path}", path)
+                    .replace("${filename}", filename)
+                    .replace("${stream}", Integer.toString(input.hashCode())), e);
+            return false;
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean createDirectory(String path) {
+        if (path == null || path.trim().length() == 0)
+            return false;
+        if (sftpChannel == null || !sftpChannel.isConnected()) {
+            if (!connect()) {
+                return false;
+            }
+        }
+        path = path.replace("\\", "/");
+        if ("/".equals(path)) {
+            return true;
+        }
+        String[] paths = path.split("/");
+        try {
+            StringBuilder pathBuilder = new StringBuilder("/");
+            sftpChannel.cd("/");
+            for (String dir : paths) {
+                if (dir.trim().length() == 0) {
+                    continue;
+                }
+                Boolean exists = false;
+                Vector<ChannelSftp.LsEntry> ls = sftpChannel.ls(".");
+                for (ChannelSftp.LsEntry file : ls) {
+                    if (".".equals(file.getFilename()) || "..".equals(file.getFilename())) {
+                        continue;
+                    }
+                    if (dir.equals(file.getFilename())) {
+                        exists = true;
+                        if (!file.getAttrs().isDir() && !file.getAttrs().isLink()) {
+                            exists = null;
+                        }
+                        break;
+                    }
+                }
+                if (exists == null) {
+                    log.error(message.getString("fs.sftp.mkdir.fail.exists.not.directory")
+                            .replace("${path}", pathBuilder.toString()));
+                    return false;
+                }
+                if (exists) {
+                    sftpChannel.cd(dir);
+                } else {
+                    sftpChannel.mkdir(dir);
+                    sftpChannel.cd(dir);
+                }
+                pathBuilder.append(dir).append("/");
+            }
+            return true;
+        } catch (Exception e) {
+            log.error(message.getString("fs.sftp.mkdir.error")
+                    .replace("${path}", path), e);
+        }
+        return false;
+    }
+
+    @Override
+    public ByteArrayOutputStream downloadStream(String path, String filename) {
+        if (path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+            return null;
+        if (sftpChannel == null || !sftpChannel.isConnected()) {
+            if (!connect()) {
+                return null;
+            }
+        }
+        try {
+            sftpChannel.cd(path);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            sftpChannel.get(filename, outputStream);
+            return outputStream;
+        } catch (Exception e) {
+            log.error(message.getString("fs.sftp.download.error")
+                    .replace("${path}", path)
+                    .replace("${filename}", filename), e);
+            return null;
+        }
+    }
+
+    @Override
+    public boolean deleteFile(String path, String filename) {
+        if (path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+            return false;
+        if (sftpChannel == null || !sftpChannel.isConnected()) {
+            if (!connect()) {
+                return false;
+            }
+        }
+        try {
+            sftpChannel.cd(path);
+            sftpChannel.rm(filename);
+            log.debug(message.getString("fs.sftp.delete.success")
+                    .replace("${path}", path)
+                    .replace("${filename}", filename));
+            return true;
+        } catch (Exception e) {
+            log.error(message.getString("fs.sftp.delete.error")
+                    .replace("${path}", path)
+                    .replace("${filename}", filename), e);
+            return false;
+        }
+    }
+
+}

@@ -1,0 +1,8 @@
+# 项目排除路径
+/filesystem-spring-boot-api/target/
+/filesystem-spring-boot-fast-dfs/target/
+/filesystem-spring-boot-ftp/target/
+/filesystem-spring-boot-sftp/target/
+/filesystem-spring-boot-starter/target/
+# 项目排除路径
+/filesystem-spring-boot-test-java/target/
