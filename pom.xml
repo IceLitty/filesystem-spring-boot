@@ -16,6 +16,33 @@
         <module>filesystem-spring-boot-starter</module>
     </modules>
 
+    <name>Filesystem Utils</name>
+    <url>https://github.com/IceLitty/filesystem-spring-boot</url>
+    <inceptionYear>2022</inceptionYear>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/IceLitty/filesystem-spring-boot/issues</url>
+    </issueManagement>
+    <scm>
+        <connection>scm:git:https://github.com/IceLitty/filesystem-spring-boot.git</connection>
+        <developerConnection>scm:git:git@github.com:IceLitty/filesystem-spring-boot.git</developerConnection>
+        <url>https://github.com/IceLitty/filesystem-spring-boot</url>
+    </scm>
+    <developers>
+        <developer>
+            <name>IceLitty</name>
+            <email>LitAlways@gmail.com</email>
+            <url>https://github.com/IceLitty</url>
+        </developer>
+    </developers>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
