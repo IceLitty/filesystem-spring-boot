@@ -4,6 +4,11 @@
 `-Djava.security.egd=file:/dev/./urandom`
 以使SecurityRandom在linux服务器环境不受阻断）
 ```java
+// 使用Springboot自动装载配置文件（使用本项目的starter）
+// 不使用starter的方案参考 filesystem-spring-boot-test-java 模块内的样例
+@Autowired
+private FileSystemProfile profile;
+...
 String path = "/测试目录";
 String filename = "测试文件.txt";
 String context = "文本";
@@ -33,6 +38,10 @@ fs.close();
 
 - FastDFS
 ```java
+// 使用Springboot自动装载配置文件（使用本项目的starter）
+@Autowired
+private FileSystemProfile profile;
+...
 StringBuffer pathBuffer = new StringBuffer();
 StringBuffer filenameBuffer = new StringBuffer("测试文件.txt");
 String context = "文本";

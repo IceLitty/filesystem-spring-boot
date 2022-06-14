@@ -21,8 +21,6 @@ class TestApplicationTests {
 
     @Autowired
     private FileSystemProfile profile;
-    @Autowired
-    private JsonMapper jsonMapper;
 
     @Test
     void testProfile() {
