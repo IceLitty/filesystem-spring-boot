@@ -101,13 +101,22 @@ public abstract class FileSystem implements AutoCloseable {
      */
     public abstract Collection<FileInfo> list(String path, boolean deepFind, boolean flatPrint);
 
+    /**
+     * 查询文件信息
+     * @param path 绝对路径
+     * @param filename 文件名
+     * @return 文件信息对象
+     */
     public FileInfo peekFile(String path, String filename) {
         return null;
     }
 
     /**
-     * 上传文件，通过输入流<br/>
-     * 提供给特殊需求使用的方法
+     * <p>上传文件，通过输入流</p>
+     * <p>提供给特殊需求使用的方法</p>
+     * @param input 需要上传的流
+     * @param path 目标文件绝对路径
+     * @param filename 目标文件名称
      * @return 上传成功与否
      */
     public boolean upload(InputStream input, StringBuffer path, StringBuffer filename) {
@@ -115,8 +124,8 @@ public abstract class FileSystem implements AutoCloseable {
     }
 
     /**
-     * 上传文件，通过字节<br/>
-     * 提供给特殊需求使用的方法
+     * <p>上传文件，通过字节</p>
+     * <p>提供给特殊需求使用的方法</p>
      * @param bytes 需要上传的字节
      * @param path 目标文件绝对路径
      * @param filename 目标文件名称
@@ -127,8 +136,8 @@ public abstract class FileSystem implements AutoCloseable {
     }
 
     /**
-     * 上传文件，通过Base64<br/>
-     * 提供给特殊需求使用的方法
+     * <p>上传文件，通过Base64</p>
+     * <p>提供给特殊需求使用的方法</p>
      * @param base64 需要上传的Base64
      * @param path 目标文件绝对路径
      * @param filename 目标文件名称
@@ -140,6 +149,9 @@ public abstract class FileSystem implements AutoCloseable {
 
     /**
      * 上传文件，通过输入流
+     * @param input 需要上传的流
+     * @param path 目标文件绝对路径
+     * @param filename 目标文件名称
      * @return 上传成功与否
      */
     public abstract boolean upload(InputStream input, String path, String filename);
@@ -271,6 +283,15 @@ public abstract class FileSystem implements AutoCloseable {
         this.disconnect();
     }
 
+    /**
+     * 为可能的断点续传提供接口支持
+     * @param base64 BASE64
+     * @param path 绝对路径
+     * @param filename 文件名
+     * @param fileSize 当前块大小
+     * @param fileOffset 从文件该偏移量处继续上传
+     * @return 成功与否
+     */
     public boolean appenderUpload(String base64, StringBuffer path, StringBuffer filename, long fileSize, long fileOffset) {
         byte[] bytes = _base64ToBytes(base64, path.toString(), filename.toString());
         if (bytes == null) {
@@ -279,6 +300,15 @@ public abstract class FileSystem implements AutoCloseable {
         return appenderUpload(bytes, path, filename, fileSize, fileOffset);
     }
 
+    /**
+     * 为可能的断点续传提供接口支持
+     * @param bytes 要上传的字节
+     * @param path 绝对路径
+     * @param filename 文件名
+     * @param fileSize 当前块大小
+     * @param fileOffset 从文件该偏移量处继续上传
+     * @return 成功与否
+     */
     public boolean appenderUpload(byte[] bytes, StringBuffer path, StringBuffer filename, long fileSize, long fileOffset) {
         try (ByteArrayInputStream stream = new ByteArrayInputStream(bytes)) {
             return appenderUpload(stream, path, filename, fileSize, fileOffset);

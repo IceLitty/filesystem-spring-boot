@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-api/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-fast-dfs/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-fast-dfs/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-ftp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-ftp/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-sftp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-sftp/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-starter/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-starter/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-test-java/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/filesystem-spring-boot-test-java/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/filesystem-spring-boot-test/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

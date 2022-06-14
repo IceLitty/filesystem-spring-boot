@@ -202,9 +202,9 @@ public class FdfsFileSystem extends FileSystem {
     }
 
     /**
-     * 用于查看文件信息<br/>
-     * <b>不同于其他文件系统，FastDFS不支持自定义目录结构，故没有列出文件信息的功能，
-     * 但是为了支持断点续传，需要实现查看服务端文件大小的功能</b>
+     * <p>用于查看文件信息</p>
+     * <p><b>不同于其他文件系统，FastDFS不支持自定义目录结构，故没有列出文件信息的功能，
+     * 但是为了支持断点续传，需要实现查看服务端文件大小的功能</b></p>
      * @param path 组名+绝对路径
      * @param filename 文件名
      * @return 文件信息
@@ -241,8 +241,8 @@ public class FdfsFileSystem extends FileSystem {
     }
 
     /**
-     * 上传文件<br/>
-     * <b>路径会被忽略，文件名用于识别后缀传输给FastDFS</b>
+     * <p>上传文件</p>
+     * <p><b>路径会被忽略，文件名用于识别后缀传输给FastDFS</b></p>
      * @param input 流
      * @param path 路径
      * @param filename 文件名
@@ -372,14 +372,14 @@ public class FdfsFileSystem extends FileSystem {
     }
 
     /**
-     * 格式化路径<br/>
-     * 支持以下流程（完整路径：组名+路径+文件名）：<br/>
-     * <ul>
+     * <p>格式化路径</p>
+     * <p>支持以下流程（完整路径：组名+路径+文件名）：</p>
+     * <p><ul>
      *     <li>路径：完整路径，文件名：空</li>
      *     <li>路径：空，文件名：完整路径</li>
      *     <li>路径：组名+路径，文件名：文件名</li>
      *     <li>路径：组名，文件名：路径+文件名</li>
-     * </ul>
+     * </ul></p>
      * @param path 原路径参数
      * @param filename 原文件名参数
      * @return 0-路径，1-文件名，2-组名
@@ -471,10 +471,10 @@ public class FdfsFileSystem extends FileSystem {
     }
 
     /**
-     * 支持断点续传的上传功能<br/><br/>
-     * <b>若是首次上传：</b>路径必须传组名，文件名用于识别文件后缀传输给FastDFS。<br/>
-     * <b>若是断点续传：</b>路径需要传带组名的完整地址，文件名可附加于路径对象末尾或在文件名对象上。
-     * <b>可直接将首次上传后的两个StringBuffer对象传入后续的断点续传。</b>
+     * <p>支持断点续传的上传功能</p>
+     * <p><b>若是首次上传：</b>路径必须传组名，文件名用于识别文件后缀传输给FastDFS。</p>
+     * <p><b>若是断点续传：</b>路径需要传带组名的完整地址，文件名可附加于路径对象末尾或在文件名对象上。
+     * <b>可直接将首次上传后的两个StringBuffer对象传入后续的断点续传。</b></p>
      * @param input 当前块的输入流
      * @param path 首次上传模式：组名，断点续传模式：组名+文件路径
      * @param filename 文件名
