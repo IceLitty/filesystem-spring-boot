@@ -98,7 +98,7 @@ fs.close();
 <dependency>
     <groupId>moe.icyr</groupId>
     <artifactId>filesystem-spring-boot-starter</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 - 不使用Springboot
@@ -106,23 +106,23 @@ fs.close();
 <dependency>
     <groupId>moe.icyr</groupId>
     <artifactId>filesystem-spring-boot-api</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 <dependency>
     <groupId>moe.icyr</groupId>
     <artifactId>filesystem-spring-boot-ftp</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 <dependency>
     <groupId>moe.icyr</groupId>
     <artifactId>filesystem-spring-boot-sftp</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 <!-- 警告：该fdfs使用的连接器客户端依赖了Springboot子模块，不建议非Springboot情况下使用该实现 -->
 <dependency>
     <groupId>moe.icyr</groupId>
     <artifactId>filesystem-spring-boot-fast-dfs</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 

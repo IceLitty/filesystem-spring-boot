@@ -10,7 +10,7 @@
     </parent>
     <groupId>moe.icyr</groupId>
     <artifactId>filesystem-spring-boot-test</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>local</version>
     <name>filesystem-spring-boot-test</name>
     <description>filesystem-spring-boot-test</description>
     <properties>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>moe.icyr</groupId>
             <artifactId>filesystem-spring-boot-starter</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
 
         <dependency>
