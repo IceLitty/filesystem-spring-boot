@@ -16,9 +16,9 @@ public class FtpProperty extends FileSystemProperty {
 
     public FtpProperty(FileSystemProperty property) {
         super(property);
-        this.charset = property.getExternal() == null ? null : String.valueOf(property.getExternal().get("charset"));
+        this.charset = property.getExternal() == null ? null : (property.getExternal().get("charset") == null ? null : String.valueOf(property.getExternal().get("charset")));
         try {
-            this.retries = property.getExternal() == null ? null : Integer.valueOf(String.valueOf(property.getExternal().get("retries")));
+            this.retries = property.getExternal() == null ? null : (property.getExternal().get("retries") == null ? null : Integer.valueOf(String.valueOf(property.getExternal().get("retries"))));
         } catch (NumberFormatException e) {
             this.retries = null;
         }

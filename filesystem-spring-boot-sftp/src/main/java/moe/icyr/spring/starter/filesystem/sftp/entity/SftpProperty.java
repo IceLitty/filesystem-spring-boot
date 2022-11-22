@@ -16,17 +16,25 @@ public class SftpProperty extends FileSystemProperty {
 
     public SftpProperty(FileSystemProperty property) {
         super(property);
-        this.privateKey = property.getExternal() == null ? null :
-                (property.getExternal().get("privateKey") != null ?
-                        String.valueOf(property.getExternal().get("privateKey")) :
-                        String.valueOf(property.getExternal().get("private-key")));
-        try {
-            this.keepAliveSecond = property.getExternal() == null ? null :
-                    (property.getExternal().get("keepAliveSecond") != null ?
-                            Integer.valueOf(String.valueOf(property.getExternal().get("keepAliveSecond"))) :
-                            Integer.valueOf(String.valueOf(property.getExternal().get("keep-alive-second"))));
-        } catch (NumberFormatException e) {
-            this.keepAliveSecond = null;
+        this.privateKey = null;
+        this.keepAliveSecond = null;
+        if (property.getExternal() != null) {
+            if (property.getExternal().get("privateKey") == null) {
+                if (property.getExternal().get("private-key") != null) {
+                    this.privateKey = String.valueOf(property.getExternal().get("private-key"));
+                }
+            } else {
+                this.privateKey = String.valueOf(property.getExternal().get("privateKey"));
+            }
+            try {
+                if (property.getExternal().get("keepAliveSecond") == null) {
+                    if (property.getExternal().get("keep-alive-second") != null) {
+                        this.keepAliveSecond = Integer.valueOf(String.valueOf(property.getExternal().get("keep-alive-second")));
+                    }
+                } else {
+                    this.keepAliveSecond = Integer.valueOf(String.valueOf(property.getExternal().get("keepAliveSecond")));
+                }
+            } catch (NumberFormatException ignored) {}
         }
     }
 

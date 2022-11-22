@@ -21,21 +21,21 @@
             <artifactId>filesystem-spring-boot-api</artifactId>
             <version>1.1</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>moe.icyr</groupId>-->
-<!--            <artifactId>filesystem-spring-boot-ftp</artifactId>-->
-<!--            <version>1.1</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>moe.icyr</groupId>
+            <artifactId>filesystem-spring-boot-ftp</artifactId>
+            <version>1.1</version>
+        </dependency>
         <dependency>
             <groupId>moe.icyr</groupId>
             <artifactId>filesystem-spring-boot-sftp</artifactId>
             <version>1.1</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>moe.icyr</groupId>-->
-<!--            <artifactId>filesystem-spring-boot-fast-dfs</artifactId>-->
-<!--            <version>1.1</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>moe.icyr</groupId>
+            <artifactId>filesystem-spring-boot-fast-dfs</artifactId>
+            <version>1.1</version>
+        </dependency>
     </dependencies>
 
     <build>
