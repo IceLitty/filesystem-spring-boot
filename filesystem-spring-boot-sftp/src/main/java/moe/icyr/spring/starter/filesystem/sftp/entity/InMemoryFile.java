@@ -3,6 +3,7 @@ package moe.icyr.spring.starter.filesystem.sftp.entity;
 import net.schmizz.sshj.xfer.InMemoryDestFile;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -18,7 +19,17 @@ public class InMemoryFile extends InMemoryDestFile {
     }
 
     @Override
+    public long getLength() {
+        return stream.size();
+    }
+
+    @Override
     public OutputStream getOutputStream() {
+        return stream;
+    }
+
+    @Override
+    public OutputStream getOutputStream(boolean append) {
         return stream;
     }
 
