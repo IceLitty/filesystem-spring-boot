@@ -182,8 +182,8 @@ public class MinIOFileSystem extends FileSystem<MinioClient, Item> {
 
     /**
      * 列出文件(夹)
-     * <p color=orange>flatPrint若为true，则与其他文件系统不同，返回内容不包含文件夹</p>
-     * <p color=orange>数据条数过多时请注意内存用量</p>
+     * <p style="color:orange">flatPrint若为true，则与其他文件系统不同，返回内容不包含文件夹</p>
+     * <p style="color:orange">数据条数过多时请注意内存用量</p>
      *
      * @param path 桶名称/对象路径
      * @param deepFind 是否读取子文件
@@ -198,8 +198,8 @@ public class MinIOFileSystem extends FileSystem<MinioClient, Item> {
 
     /**
      * 列出文件(夹)（包含文件版本号）
-     * <p color=orange>flatPrint若为true，则与其他文件系统不同，返回内容不包含文件夹</p>
-     * <p color=orange>数据条数过多时请注意内存用量</p>
+     * <p style="color:orange">flatPrint若为true，则与其他文件系统不同，返回内容不包含文件夹</p>
+     * <p style="color:orange">数据条数过多时请注意内存用量</p>
      *
      * @param path 桶名称/对象路径
      * @param deepFind 是否读取子文件
@@ -416,7 +416,7 @@ public class MinIOFileSystem extends FileSystem<MinioClient, Item> {
 
     /**
      * 根据给定路径创建至目录
-     * <p color=orange>警告：该方法会额外创建一个视为文件夹的文件（在文件夹视图中会显示为：桶/文件夹/文件，在平铺视图中会显示为：桶/文件），MinIO API未提供仅创建文件夹的接口，建议直接上传文件使其自动生成文件目录结构</p>
+     * <p style="color:orange">警告：该方法会额外创建一个视为文件夹的文件（在文件夹视图中会显示为：桶/文件夹/文件，在平铺视图中会显示为：桶/文件），MinIO API未提供仅创建文件夹的接口，建议直接上传文件使其自动生成文件目录结构</p>
      *
      * @param path 绝对路径
      * @return 创建成功与否
