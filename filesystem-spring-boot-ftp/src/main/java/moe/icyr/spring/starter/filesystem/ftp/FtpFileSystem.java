@@ -26,7 +26,7 @@ import java.util.ResourceBundle;
  * @author IceLitty
  * @since 1.0
  */
-public class FtpFileSystem extends FileSystem {
+public class FtpFileSystem extends FileSystem<FTPClient, FTPFile> {
 
     private static final Logger log = LoggerFactory.getLogger(FtpFileSystem.class);
     private static final ResourceBundle message = ResourceBundle.getBundle("MessageFtp");
@@ -124,6 +124,11 @@ public class FtpFileSystem extends FileSystem {
     }
 
     @Override
+    public FTPClient getFileSystemHolder() {
+        return ftpClient;
+    }
+
+    @Override
     public void disconnect() {
         if (null != ftpClient) {
             try {
@@ -137,9 +142,17 @@ public class FtpFileSystem extends FileSystem {
     }
 
     @Override
-    public Collection<FileInfo> list(String path, boolean deepFind, boolean flatPrint) {
-        if (path == null || path.trim().length() == 0)
+    public List<FileInfo<FTPFile>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth) {
+        return list(path, deepFind, flatPrint, maxDepth, 0);
+    }
+
+    private List<FileInfo<FTPFile>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth, int nowDepth) {
+        if (deepFind && maxDepth >= 0 && nowDepth > maxDepth) {
             return null;
+        }
+        if (path == null || path.trim().isEmpty()) {
+            return null;
+        }
         if (ftpClient == null || !ftpClient.isConnected() || (this.retryCountdown >= 0 && this.retryCountdown < this.property.getRetries())) {
             if (!connect()) {
                 return null;
@@ -156,14 +169,15 @@ public class FtpFileSystem extends FileSystem {
                 return null;
             }
             FTPFile[] ftpFiles = ftpClient.listFiles();
-            List<FileInfo> files = new ArrayList<>();
+            List<FileInfo<FTPFile>> files = new ArrayList<>();
             for (FTPFile file : ftpFiles) {
-                FileInfo info = new FileInfo();
+                FileInfo<FTPFile> info = new FileInfo<>();
                 info.setAbsolutePath(oriPath);
                 info.setFilename(file.getName());
                 info.setSize(file.getSize());
                 info.setFile(file.isFile());
                 info.setDirectory(file.isDirectory());
+                info.setOriginalInfo(file);
                 files.add(info);
                 if (deepFind && file.isDirectory()) {
                     String childPath;
@@ -174,18 +188,20 @@ public class FtpFileSystem extends FileSystem {
                     } else {
                         childPath = path + "/" + file.getName();
                     }
-                    Collection<FileInfo> list = list(childPath, true, flatPrint);
-                    if (flatPrint) {
-                        files.addAll(list);
-                    } else {
-                        info.setChildren(list);
+                    Collection<FileInfo<FTPFile>> list = list(childPath, true, flatPrint, maxDepth, nowDepth + 1);
+                    if (list != null) {
+                        if (flatPrint) {
+                            files.addAll(list);
+                        } else {
+                            info.setChildren(list);
+                        }
                     }
                 }
             }
             return files;
         } catch (SocketException e) {
             this.retryCountdown--;
-            return list(path, deepFind, flatPrint);
+            return list(path, deepFind, flatPrint, maxDepth, nowDepth);
         } catch (Exception e) {
             log.error(message.getString("fs.ftp.list.error")
                     .replace("${path}", path), e);
@@ -196,7 +212,7 @@ public class FtpFileSystem extends FileSystem {
     @Override
     @SuppressWarnings("DuplicatedCode")
     public boolean upload(InputStream input, String path, String filename) {
-        if (input == null || path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+        if (input == null || path == null || path.trim().isEmpty() || filename == null || filename.trim().isEmpty())
             return false;
         if (ftpClient == null || !ftpClient.isConnected() || (this.retryCountdown >= 0 && this.retryCountdown < this.property.getRetries())) {
             if (!connect()) {
@@ -244,7 +260,7 @@ public class FtpFileSystem extends FileSystem {
     @Override
     @SuppressWarnings("DuplicatedCode")
     public boolean createDirectory(String path) {
-        if (path == null || path.trim().length() == 0)
+        if (path == null || path.trim().isEmpty())
             return false;
         if (ftpClient == null || !ftpClient.isConnected() || (this.retryCountdown >= 0 && this.retryCountdown < this.property.getRetries())) {
             if (!connect()) {
@@ -288,7 +304,7 @@ public class FtpFileSystem extends FileSystem {
 
     @Override
     public ByteArrayOutputStream downloadStream(String path, String filename) {
-        if (path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+        if (path == null || path.trim().isEmpty() || filename == null || filename.trim().isEmpty())
             return null;
         if (ftpClient == null || !ftpClient.isConnected() || (this.retryCountdown >= 0 && this.retryCountdown < this.property.getRetries())) {
             if (!connect()) {
@@ -345,7 +361,7 @@ public class FtpFileSystem extends FileSystem {
 
     @Override
     public boolean deleteFile(String path, String filename) {
-        if (path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+        if (path == null || path.trim().isEmpty() || filename == null || filename.trim().isEmpty())
             return false;
         if (ftpClient == null || !ftpClient.isConnected() || (this.retryCountdown >= 0 && this.retryCountdown < this.property.getRetries())) {
             if (!connect()) {

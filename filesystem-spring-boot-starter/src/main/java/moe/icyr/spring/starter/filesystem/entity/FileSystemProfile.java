@@ -59,7 +59,7 @@ public class FileSystemProfile {
     public FileSystemProperty getProfile(String alias) {
         if (this.profiles == null || this.profiles.length == 0)
             return null;
-        if (alias == null || alias.trim().length() == 0)
+        if (alias == null || alias.trim().isEmpty())
             return null;
         for (FileSystemProperty prop : this.profiles) {
             if (alias.equals(prop.getAlias())) {

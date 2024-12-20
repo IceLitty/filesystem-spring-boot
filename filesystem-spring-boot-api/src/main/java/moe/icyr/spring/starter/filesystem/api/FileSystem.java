@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Base64;
-import java.util.Collection;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
@@ -17,7 +19,7 @@ import java.util.regex.Pattern;
  * @author IceLitty
  * @since 1.0
  */
-public abstract class FileSystem implements AutoCloseable {
+public abstract class FileSystem<T, F> implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(FileSystem.class);
     private static final Pattern base64UrlPrefixPattern = Pattern.compile("^data:\\w+/?\\w*;base64,");
@@ -51,13 +53,13 @@ public abstract class FileSystem implements AutoCloseable {
         if (property.getType() == null) {
             throw new IllegalArgumentException(message.getString("fs.property.type.valid.fail"));
         }
-        if (property.getIp() == null || property.getIp().trim().length() == 0) {
+        if (property.getIp() == null || property.getIp().trim().isEmpty()) {
             throw new IllegalArgumentException(message.getString("fs.property.ip.valid.fail"));
         }
         if (property.getPort() == null || property.getPort() < 0 || property.getPort() > 65535) {
             throw new IllegalArgumentException(message.getString("fs.property.port.valid.fail"));
         }
-        if (property.getUsername() == null || property.getUsername().trim().length() == 0) {
+        if (property.getUsername() == null || property.getUsername().trim().isEmpty()) {
             throw new IllegalArgumentException(message.getString("fs.property.username.valid.fail"));
         }
         if (property.getPassword() == null) {
@@ -79,6 +81,12 @@ public abstract class FileSystem implements AutoCloseable {
     protected abstract boolean connect();
 
     /**
+     * 获取原生客户端实例
+     * @return 对应fileSystem原生客户端实例
+     */
+    public abstract T getFileSystemHolder();
+
+    /**
      * 断开连接
      */
     public abstract void disconnect();
@@ -86,10 +94,10 @@ public abstract class FileSystem implements AutoCloseable {
     /**
      * 列出文件(夹)
      * @param path 绝对路径
-     * @return 文件(夹)信息列表，若没有这个目录、FTP连接失败、或其他异常则返回NULL
+     * @return 文件(夹)信息列表，若没有这个目录、文件服务器连接失败、或其他异常则返回NULL
      */
-    public Collection<FileInfo> list(String path) {
-        return list(path, false, false);
+    public List<FileInfo<F>> list(String path) {
+        return list(path, false, false, -1);
     }
 
     /**
@@ -97,9 +105,10 @@ public abstract class FileSystem implements AutoCloseable {
      * @param path 绝对路径
      * @param deepFind 是否读取子文件
      * @param flatPrint 是否扁平化输出
-     * @return 文件(夹)信息列表，若没有这个目录、FTP连接失败、或其他异常则返回NULL
+     * @param maxDepth 当deepFind为true时，限制最大深度，需>=0，<0为不限制
+     * @return 文件(夹)信息列表，若没有这个目录、文件服务器连接失败、或其他异常则返回NULL
      */
-    public abstract Collection<FileInfo> list(String path, boolean deepFind, boolean flatPrint);
+    public abstract List<FileInfo<F>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth);
 
     /**
      * 查询文件信息
@@ -107,7 +116,7 @@ public abstract class FileSystem implements AutoCloseable {
      * @param filename 文件名
      * @return 文件信息对象
      */
-    public FileInfo peekFile(String path, String filename) {
+    public FileInfo<F> peekFile(String path, String filename) {
         return null;
     }
 
@@ -133,6 +142,18 @@ public abstract class FileSystem implements AutoCloseable {
      */
     public boolean upload(byte[] bytes, StringBuffer path, StringBuffer filename) {
         return _upload(bytes, path, filename);
+    }
+
+    /**
+     * <p>上传文件，通过文件对象</p>
+     * <p>提供给特殊需求使用的方法</p>
+     * @param file 需要上传的文件
+     * @param path 目标文件绝对路径
+     * @param filename 目标文件名称
+     * @return 上传成功与否
+     */
+    public boolean upload(File file, StringBuffer path, StringBuffer filename) {
+        return _upload(file, path, filename);
     }
 
     /**
@@ -168,6 +189,18 @@ public abstract class FileSystem implements AutoCloseable {
     }
 
     /**
+     * <p>上传文件，通过文件对象</p>
+     * <p>提供给特殊需求使用的方法</p>
+     * @param file 需要上传的文件
+     * @param path 目标文件绝对路径
+     * @param filename 目标文件名称
+     * @return 上传成功与否
+     */
+    public boolean upload(File file, String path, String filename) {
+        return _upload(file, path, filename);
+    }
+
+    /**
      * 上传文件，通过Base64
      * @param base64 需要上传的Base64
      * @param path 目标文件绝对路径
@@ -196,6 +229,30 @@ public abstract class FileSystem implements AutoCloseable {
         return false;
     }
 
+    private boolean _upload(File file, Object path, Object filename) {
+        try (FileInputStream fileInputStream = new FileInputStream(file);) {
+            if (path instanceof StringBuffer && filename instanceof StringBuffer) {
+                return upload(fileInputStream, (StringBuffer) path, (StringBuffer) filename);
+            } else if (path instanceof String && filename instanceof String) {
+                return upload(fileInputStream, (String) path, (String) filename);
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            String size;
+            try {
+                size = String.valueOf(file.length());
+            } catch (Throwable ignored) {
+                size = "";
+            }
+            log.error(message.getString("fs.upload.fail.io")
+                    .replace("${path}", String.valueOf(path))
+                    .replace("${filename}", String.valueOf(filename))
+                    .replace("${length}", size), e);
+        }
+        return false;
+    }
+
     private boolean _upload(String base64, Object path, Object filename) {
         byte[] bytes = _base64ToBytes(base64, path, filename);
         if (bytes == null) {
@@ -210,7 +267,7 @@ public abstract class FileSystem implements AutoCloseable {
         }
     }
 
-    private byte[] _base64ToBytes(String base64, Object path, Object filename) {
+    protected byte[] _base64ToBytes(String base64, Object path, Object filename) {
         if (base64UrlPrefixPattern.matcher(base64).find()) {
             base64 = base64.replaceFirst(base64UrlPrefixReplaceString, "");
         }
@@ -243,6 +300,63 @@ public abstract class FileSystem implements AutoCloseable {
             return null;
         }
         return new String(Base64.getEncoder().encode(bytes));
+    }
+
+    /**
+     * 下载为临时文件
+     * @param path 绝对路径
+     * @param filename 文件名
+     * @return 文件
+     */
+    public File downloadFile(String path, String filename) {
+        File dest;
+        try {
+            String destFilename;
+            String destFileSuffix;
+            if (filename == null) {
+                destFilename = "FileSystemUtilTempDownload";
+                destFileSuffix = ".bin";
+            } else {
+                String[] split = filename.split("/");
+                String name;
+                if (split.length > 1) {
+                    name = split[split.length - 1];
+                } else {
+                    name = filename;
+                }
+                if (name.contains(".")) {
+                    destFilename = name.substring(0, name.lastIndexOf("."));
+                    destFileSuffix = "." + name.substring(name.lastIndexOf(".") + 1);
+                } else {
+                    destFilename = name;
+                    destFileSuffix = ".bin";
+                }
+            }
+            dest = File.createTempFile(destFilename, destFileSuffix);
+        } catch (Exception e) {
+            log.error(message.getString("fs.download.fail.io"), e);
+            return null;
+        }
+        return downloadFile(path, filename, dest);
+    }
+
+    /**
+     * 下载为文件
+     * @param path 绝对路径
+     * @param filename 文件名
+     * @return 文件
+     */
+    public File downloadFile(String path, String filename, File destFile) {
+        byte[] bytes = downloadBytes(path, filename);
+        if (bytes == null) {
+            return null;
+        }
+        try {
+            return Files.write(destFile.toPath(), bytes, StandardOpenOption.CREATE_NEW).toFile();
+        } catch (Exception e) {
+            log.error(message.getString("fs.download.fail.io"), e);
+            return null;
+        }
     }
 
     /**

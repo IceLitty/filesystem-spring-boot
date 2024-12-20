@@ -22,6 +22,7 @@ public class FileSystemProperty {
     public FileSystemProperty() {
     }
 
+    @SuppressWarnings("CopyConstructorMissesField")
     public FileSystemProperty(FileSystemProperty property) {
         this.type = property.getType();
         this.alias = property.getAlias();

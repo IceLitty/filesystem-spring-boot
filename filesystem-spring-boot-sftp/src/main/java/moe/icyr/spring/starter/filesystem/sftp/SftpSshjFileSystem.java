@@ -27,7 +27,7 @@ import java.util.*;
  * @author IceLitty
  * @since 1.0
  */
-public class SftpSshjFileSystem extends FileSystem {
+public class SftpSshjFileSystem extends FileSystem<SFTPClient, RemoteResourceInfo> {
 
     private static final Logger log = LoggerFactory.getLogger(SftpSshjFileSystem.class);
     private static final ResourceBundle message = ResourceBundle.getBundle("MessageSftp");
@@ -105,10 +105,10 @@ public class SftpSshjFileSystem extends FileSystem {
                     return false;
                 }
             }
-            if (this.property.getPrivateKey() != null && this.property.getPrivateKey().trim().length() > 0) {
+            if (this.property.getPrivateKey() != null && !this.property.getPrivateKey().trim().isEmpty()) {
                 try {
                     KeyProvider keyProvider;
-                    if (this.property.getPassword() != null && this.property.getPassword().trim().length() > 0) {
+                    if (this.property.getPassword() != null && !this.property.getPassword().trim().isEmpty()) {
                         keyProvider = sshClient.loadKeys(this.property.getPrivateKey(), this.property.getPassword());
                     } else {
                         keyProvider = sshClient.loadKeys(this.property.getPrivateKey());
@@ -121,7 +121,7 @@ public class SftpSshjFileSystem extends FileSystem {
                             .replace("${username}", this.property.getUsername()), e);
                     return false;
                 }
-            } else if (this.property.getPassword() != null && this.property.getPassword().trim().length() > 0) {
+            } else if (this.property.getPassword() != null && !this.property.getPassword().trim().isEmpty()) {
                 try {
                     sshClient.authPassword(this.property.getUsername(), this.property.getPassword());
                 } catch (Exception e) {
@@ -146,6 +146,11 @@ public class SftpSshjFileSystem extends FileSystem {
     }
 
     @Override
+    public SFTPClient getFileSystemHolder() {
+        return sftpClient;
+    }
+
+    @Override
     public void disconnect() {
         try {
             if (sftpClient != null) {
@@ -164,9 +169,17 @@ public class SftpSshjFileSystem extends FileSystem {
     }
 
     @Override
-    public Collection<FileInfo> list(String path, boolean deepFind, boolean flatPrint) {
-        if (path == null || path.trim().length() == 0)
+    public List<FileInfo<RemoteResourceInfo>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth) {
+        return list(path, deepFind, flatPrint, maxDepth, 0);
+    }
+
+    private List<FileInfo<RemoteResourceInfo>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth, int nowDepth) {
+        if (deepFind && maxDepth >= 0 && nowDepth > maxDepth) {
             return null;
+        }
+        if (path == null || path.trim().isEmpty()) {
+            return null;
+        }
         path = path.replace("\\", "/");
         if (sftpClient == null || sshClient == null || !sshClient.isConnected()) {
             if (!connect()) {
@@ -178,12 +191,12 @@ public class SftpSshjFileSystem extends FileSystem {
         }
         try {
             List<RemoteResourceInfo> ls = sftpClient.ls(path);
-            List<FileInfo> files = new ArrayList<>();
+            List<FileInfo<RemoteResourceInfo>> files = new ArrayList<>();
             for (RemoteResourceInfo file : ls) {
                 if (".".equals(file.getName()) || "..".equals(file.getName())) {
                     continue;
                 }
-                FileInfo info = new FileInfo();
+                FileInfo<RemoteResourceInfo> info = new FileInfo<>();
                 info.setAbsolutePath(path);
                 info.setFilename(file.getName());
                 info.setSize(file.getAttributes().getSize());
@@ -199,7 +212,7 @@ public class SftpSshjFileSystem extends FileSystem {
                     } else {
                         childPath = path + "/" + file.getName();
                     }
-                    Collection<FileInfo> list = list(childPath, true, flatPrint);
+                    Collection<FileInfo<RemoteResourceInfo>> list = list(childPath, true, flatPrint, maxDepth, nowDepth + 1);
                     if (flatPrint) {
                         files.addAll(list);
                     } else {
@@ -217,7 +230,7 @@ public class SftpSshjFileSystem extends FileSystem {
 
     @Override
     public boolean upload(InputStream input, String path, String filename) {
-        if (input == null || path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+        if (input == null || path == null || path.trim().isEmpty() || filename == null || filename.trim().isEmpty())
             return false;
         path = path.replace("\\", "/");
         if (sftpClient == null || sshClient == null || !sshClient.isConnected()) {
@@ -261,7 +274,7 @@ public class SftpSshjFileSystem extends FileSystem {
 
     @Override
     public boolean createDirectory(String path) {
-        if (path == null || path.trim().length() == 0)
+        if (path == null || path.trim().isEmpty())
             return false;
         path = path.replace("\\", "/");
         if (sftpClient == null || sshClient == null || !sshClient.isConnected()) {
@@ -276,7 +289,7 @@ public class SftpSshjFileSystem extends FileSystem {
         try {
             StringBuilder pathBuilder = new StringBuilder("/");
             for (String dir : paths) {
-                if (dir.trim().length() == 0) {
+                if (dir.trim().isEmpty()) {
                     continue;
                 }
                 Boolean exists = false;
@@ -313,7 +326,7 @@ public class SftpSshjFileSystem extends FileSystem {
 
     @Override
     public ByteArrayOutputStream downloadStream(String path, String filename) {
-        if (path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+        if (path == null || path.trim().isEmpty() || filename == null || filename.trim().isEmpty())
             return null;
         path = path.replace("\\", "/");
         if (sftpClient == null || sshClient == null || !sshClient.isConnected()) {
@@ -343,7 +356,7 @@ public class SftpSshjFileSystem extends FileSystem {
 
     @Override
     public boolean deleteFile(String path, String filename) {
-        if (path == null || path.trim().length() == 0 || filename == null || filename.trim().length() == 0)
+        if (path == null || path.trim().isEmpty() || filename == null || filename.trim().isEmpty())
             return false;
         path = path.replace("\\", "/");
         if (sftpClient == null || sshClient == null || !sshClient.isConnected()) {

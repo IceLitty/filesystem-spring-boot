@@ -14,6 +14,7 @@ import moe.icyr.spring.starter.filesystem.api.FileSystem;
 import moe.icyr.spring.starter.filesystem.api.entity.FileInfo;
 import moe.icyr.spring.starter.filesystem.api.entity.FileSystemProperty;
 import moe.icyr.spring.starter.filesystem.fdfs.entity.FdfsProperty;
+import moe.icyr.spring.starter.filesystem.fdfs.entity.Holder;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,7 @@ import java.util.*;
  * @author IceLitty
  * @since 1.0
  */
-public class FdfsFileSystem extends FileSystem {
+public class FdfsFileSystem extends FileSystem<Holder, com.github.tobato.fastdfs.domain.fdfs.FileInfo> {
 
     private static final Logger log = LoggerFactory.getLogger(FdfsFileSystem.class);
     private static final ResourceBundle message = ResourceBundle.getBundle("MessageFdfs");
@@ -76,7 +77,7 @@ public class FdfsFileSystem extends FileSystem {
         if (fdfsProperty.getThumbImage() == null) {
             fdfsProperty.setThumbImage(new ThumbImage(150, 150));
         }
-        if (fdfsProperty.getTrackerList() == null || fdfsProperty.getTrackerList().size() < 1) {
+        if (fdfsProperty.getTrackerList() == null || fdfsProperty.getTrackerList().isEmpty()) {
             throw new IllegalArgumentException(message.getString("fs.fdfs.tracker.list.not.empty"));
         }
         return fdfsProperty;
@@ -168,7 +169,7 @@ public class FdfsFileSystem extends FileSystem {
         try {
             List<GroupState> groupStates = trackerClient.listGroups();
             StringBuilder p = new StringBuilder();
-            if (groupStates != null && groupStates.size() > 0) {
+            if (groupStates != null && !groupStates.isEmpty()) {
                 for (GroupState gs : groupStates) {
                     String groupName = gs.getGroupName();
                     long freeMB = gs.getFreeMB();
@@ -192,11 +193,16 @@ public class FdfsFileSystem extends FileSystem {
     }
 
     @Override
+    public Holder getFileSystemHolder() {
+        return new Holder(trackerConnManager, trackerClient, storageConnManager, storageClient, appenderStorageClient);
+    }
+
+    @Override
     public void disconnect() {
     }
 
     @Override
-    public Collection<FileInfo> list(String path, boolean deepFind, boolean flatPrint) {
+    public List<FileInfo<com.github.tobato.fastdfs.domain.fdfs.FileInfo>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth) {
         log.error(message.getString("fs.fdfs.ls.not.support"));
         return null;
     }
@@ -210,7 +216,7 @@ public class FdfsFileSystem extends FileSystem {
      * @return 文件信息
      */
     @Override
-    public FileInfo peekFile(String path, String filename) {
+    public FileInfo<com.github.tobato.fastdfs.domain.fdfs.FileInfo> peekFile(String path, String filename) {
         if (path == null && filename == null) {
             return null;
         }
@@ -227,12 +233,13 @@ public class FdfsFileSystem extends FileSystem {
         filename = formats.get(1);
         try {
             com.github.tobato.fastdfs.domain.fdfs.FileInfo info = storageClient.queryFileInfo(groupName, path.concat("/").concat(filename));
-            FileInfo fileInfo = new FileInfo();
+            FileInfo<com.github.tobato.fastdfs.domain.fdfs.FileInfo> fileInfo = new FileInfo<>();
             fileInfo.setFilename(filename);
             fileInfo.setAbsolutePath("/".concat(groupName).concat("/").concat(path));
             fileInfo.setDirectory(false);
             fileInfo.setFile(true);
             fileInfo.setSize(info.getFileSize());
+            fileInfo.setOriginalInfo(info);
             return fileInfo;
         } catch (Exception e) {
             log.error(message.getString("fs.fdfs.ls.error"), e);
@@ -522,7 +529,7 @@ public class FdfsFileSystem extends FileSystem {
                 if (filename.length() > 0) {
                     pathStr = pathStr.concat("/").concat(filename.toString());
                 }
-                FileInfo fileInfo = peekFile(groupName, pathStr);
+                FileInfo<com.github.tobato.fastdfs.domain.fdfs.FileInfo> fileInfo = peekFile(groupName, pathStr);
                 Set<MetaData> metaData = new HashSet<>();
                 metaData.add(new MetaData("file_size", String.valueOf(fileInfo.getSize() + fileSize)));
                 appenderStorageClient.modifyFile(groupName, pathStr, input, fileSize, fileOffset);

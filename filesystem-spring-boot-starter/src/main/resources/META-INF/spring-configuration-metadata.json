@@ -6,7 +6,8 @@
         { "value": "ftp" },
         { "value": "sftp" },
         { "value": "fdfs" },
-        { "value": "fastdfs" }
+        { "value": "fastdfs" },
+        { "value": "minio" }
       ],
       "providers": [
         { "name": "any" }

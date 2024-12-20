@@ -1,8 +1,9 @@
 file-system:
-#  factory:
-#    ftp: moe.icyr.spring.starter.filesystem.ftp.FtpFileSystem
+  factory:
+    ftp: moe.icyr.spring.starter.filesystem.ftp.FtpFileSystem
 #    sftp: moe.icyr.spring.starter.filesystem.sftp.SftpFileSystem
-#    sftp: moe.icyr.spring.starter.filesystem.sftp.SftpSshjFileSystem
+    sftp: moe.icyr.spring.starter.filesystem.sftp.SftpSshjFileSystem
+    minio: moe.icyr.spring.starter.filesystem.minio.MinIOFileSystem
   profiles:
     - # 类型
       type: ftp
@@ -66,6 +67,28 @@ file-system:
 #          soft-min-evictable-idle-time-millis:
 #          test-on-create:
 #          test-on-borrow:
+    - type: minio
+      alias: 'MinIOServ1'
+      # 可输入部分或完整URL如 https://localhost:9000 http://[::]:9000 127.0.0.1:9000 127.0.0.1
+      ip: '127.0.0.1'
+      port: 9000
+      username: 'U2ALk6yzh2qsPeZWC9Ar'
+      password: 'ecbGiQE2SGZaYk52teqPVA08mOlmAvFQKEn7HM2n'
+      external:
+        # 允许上传时自动创建桶，默认false
+        canCreateBucket: true
+        # 允许删除时自动递归删除路径下的子文件，默认false
+        canDeleteFolderRecursive: true
+        # 上传流时分割单次请求大小，默认-1不进行分割，单位字节，根据MinIO接口规范，需要大于5MB且小于5GB
+        uploadDefaultPartSize: -1
+        # 是否自定义HttpClient，默认false，通过调用 connectWithCustomHttpClient() 方法传入OkHttpClient
+        customHttpClient: false
+        # 与MinIO API 交互时的自定义Header
+        headers:
+          Custom-Header-Key: customValue
+        # 上传文件时的固定自定义Metadata，也可使用 uploadWithMetadata() 方法传入动态的Metadata
+        userMetadata:
+          custom-meta-key: customMetaValue
 
 logging:
   pattern:

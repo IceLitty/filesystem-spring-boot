@@ -9,20 +9,21 @@ import java.util.StringJoiner;
  * @author IceLitty
  * @since 1.0
  */
-public class FileInfo {
+public class FileInfo<T> {
 
     private String absolutePath;
     private String filename;
     private Long size;
     private boolean isFile;
     private boolean isDirectory;
-    private Collection<FileInfo> children;
+    private Collection<FileInfo<T>> children;
+    private T originalInfo;
 
     public String getAbsolutePath() {
         return absolutePath;
     }
 
-    public FileInfo setAbsolutePath(String absolutePath) {
+    public FileInfo<T> setAbsolutePath(String absolutePath) {
         this.absolutePath = absolutePath;
         return this;
     }
@@ -31,7 +32,7 @@ public class FileInfo {
         return filename;
     }
 
-    public FileInfo setFilename(String filename) {
+    public FileInfo<T> setFilename(String filename) {
         this.filename = filename;
         return this;
     }
@@ -40,7 +41,7 @@ public class FileInfo {
         return size;
     }
 
-    public FileInfo setSize(Long size) {
+    public FileInfo<T> setSize(Long size) {
         this.size = size;
         return this;
     }
@@ -49,7 +50,7 @@ public class FileInfo {
         return isFile;
     }
 
-    public FileInfo setFile(boolean file) {
+    public FileInfo<T> setFile(boolean file) {
         isFile = file;
         return this;
     }
@@ -58,18 +59,26 @@ public class FileInfo {
         return isDirectory;
     }
 
-    public FileInfo setDirectory(boolean directory) {
+    public FileInfo<T> setDirectory(boolean directory) {
         isDirectory = directory;
         return this;
     }
 
-    public Collection<FileInfo> getChildren() {
+    public Collection<FileInfo<T>> getChildren() {
         return children;
     }
 
-    public FileInfo setChildren(Collection<FileInfo> children) {
+    public FileInfo<T> setChildren(Collection<FileInfo<T>> children) {
         this.children = children;
         return this;
+    }
+
+    public T getOriginalInfo() {
+        return originalInfo;
+    }
+
+    public void setOriginalInfo(T originalInfo) {
+        this.originalInfo = originalInfo;
     }
 
     @Override

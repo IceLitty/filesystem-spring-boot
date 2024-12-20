@@ -5,7 +5,7 @@
     <parent>
         <artifactId>filesystem-spring-boot</artifactId>
         <groupId>moe.icyr</groupId>
-        <version>1.2</version>
+        <version>1.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,31 +14,42 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <api.fsu.version>1.3</api.fsu.version>
+        <ftp.fsu.version>1.3</ftp.fsu.version>
+        <sftp.fsu.version>1.3</sftp.fsu.version>
+        <fdfs.fsu.version>1.3</fdfs.fsu.version>
+        <minio.fsu.version>1.3</minio.fsu.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>moe.icyr</groupId>
             <artifactId>filesystem-spring-boot-api</artifactId>
-            <version>${parent.version}</version>
+            <version>${api.fsu.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>moe.icyr</groupId>
             <artifactId>filesystem-spring-boot-ftp</artifactId>
-            <version>${parent.version}</version>
+            <version>${ftp.fsu.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>moe.icyr</groupId>
             <artifactId>filesystem-spring-boot-sftp</artifactId>
-            <version>${parent.version}</version>
+            <version>${sftp.fsu.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>moe.icyr</groupId>
             <artifactId>filesystem-spring-boot-fast-dfs</artifactId>
-            <version>${parent.version}</version>
+            <version>${fdfs.fsu.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>moe.icyr</groupId>
+            <artifactId>filesystem-spring-boot-minio</artifactId>
+            <version>${minio.fsu.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
