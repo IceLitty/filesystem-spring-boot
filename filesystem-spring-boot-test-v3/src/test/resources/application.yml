@@ -1,0 +1,122 @@
+file-system:
+  factory:
+    ftp: moe.icyr.spring.starter.filesystem.ftp.FtpFileSystem
+#    sftp: moe.icyr.spring.starter.filesystem.sftp.SftpFileSystem
+    sftp: moe.icyr.spring.starter.filesystem.sftp.SftpSshjFileSystem
+    minio: moe.icyr.spring.starter.filesystem.minio.MinIOFileSystem
+  profiles:
+    - # 类型
+      type: ftp
+      # 别名
+      alias: 'ftp1'
+      # IP地址
+      ip: '127.0.0.1'
+      # 端口号
+      port: 21
+      # 用户名，FTP匿名登录使用anonymous，密码任意字符串
+      username: 'icelitty'
+      # 密码
+      password: '123'
+      # 不同类型端的额外参数
+      external:
+        # 字符集
+        charset: 'gbk'
+        # 断线重连尝试次数
+        retries: 5
+    - type: sftp
+      alias: 'sftp1'
+      ip: '127.0.0.1'
+      port: 22
+      username: 'icelitty'
+      password: 'icelitty'
+      external:
+        # 私钥登录方式，配合上述password可实现加密私钥读取
+        private-key: 'C:\Users\IceRain\.ssh\wsl\icelitty\id_rsa_enc_icelitty'
+        # SSHJ提供的保持连接进程 发送心跳包频率
+#        keep-alive-second: 3
+    - type: fdfs
+      alias: 'fdfs1'
+      ip: '192.168.8.103'
+      port: 22122
+      # FDFS没有auth模式，但两个登录参数不能为空，随便填
+      username: '-'
+      password: '-'
+      external:
+        # 支持tobato FDFS客户端的以下参数传递
+        soTimeout: 3000
+        connectTimeout: 10000
+        charset: UTF-8
+        thumbImage:
+          width: 100
+          height: 100
+#        trackerList:
+#          - 'otherIp:port'
+#        pool:
+#          max-total:
+#          test-while-idle:
+#          block-when-exhausted:
+#          max-wait-millis:
+#          max-total-per-key:
+#          max-idle-per-key:
+#          min-idle-per-key:
+#          min-evictable-idle-time-millis:
+#          time-between-eviction-runs-millis:
+#          num-tests-per-eviction-run:
+#          jmx-name-base:
+#          jmx-name-prefix:
+#          soft-min-evictable-idle-time-millis:
+#          test-on-create:
+#          test-on-borrow:
+    - type: minio
+      alias: 'MinIOServ1'
+      # 可输入部分或完整URL如 https://localhost:9000 http://[::]:9000 127.0.0.1:9000 127.0.0.1
+      ip: '127.0.0.1'
+      port: 9000
+      username: 'U2ALk6yzh2qsPeZWC9Ar'
+      password: 'ecbGiQE2SGZaYk52teqPVA08mOlmAvFQKEn7HM2n'
+      external:
+        # 允许上传时自动创建桶，默认false
+        canCreateBucket: true
+        # 允许删除时自动递归删除路径下的子文件，默认false
+        canDeleteFolderRecursive: true
+        # 上传流时分割单次请求大小，默认-1不进行分割，单位字节，根据MinIO接口规范，需要大于5MB且小于5GB
+        uploadDefaultPartSize: -1
+        # 是否自定义HttpClient，默认false，通过调用 connectWithCustomHttpClient() 方法传入OkHttpClient
+        customHttpClient: false
+        # 与MinIO API 交互时的自定义Header
+        headers:
+          Custom-Header-Key: customValue
+        # 上传文件时的固定自定义Metadata，也可使用 uploadWithMetadata() 方法传入动态的Metadata
+        userMetadata:
+          custom-meta-key: customMetaValue
+
+logging:
+  pattern:
+    dateformat: 'HH:mm:ss SSS'
+    level: '%5p'
+    console: '%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(%-40.40logger{39}){cyan} %clr(%.-8X{RID}){blue} %clr(---){faint} %m{4000}%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} %X{RID} : %m%n'
+  level:
+    ROOT: info
+    moe.icyr: debug
+    com.cssnj: debug
+    org.springframework: warn
+    # webclient底层框架
+    io.netty: warn
+    reactor.netty: warn
+    # sshj
+#    net.schmizz: debug
+    moe.icyr.spring.starter.filesystem.sftp.entity.InMemoryFile: warn
+    net.schmizz.sshj.transport.random.JCERandom: warn
+    net.schmizz.sshj.transport.TransportImpl: warn
+    com.hierynomus.sshj.userauth.keyprovider.OpenSSHKeyV1KeyFile: warn
+    net.schmizz.sshj.connection.channel.direct.SessionChannel: warn
+    # fdfs
+#    com.github.tobato.fastdfs: debug
+    # 会执行超长字符串存储的sql
+  file:
+    name: './logs/spring.log'
+  logback:
+    rollingpolicy:
+      max-file-size: '500MB'
+      max-history: 100
