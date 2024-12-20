@@ -105,7 +105,7 @@ public abstract class FileSystem<T, F> implements AutoCloseable {
      * @param path 绝对路径
      * @param deepFind 是否读取子文件
      * @param flatPrint 是否扁平化输出
-     * @param maxDepth 当deepFind为true时，限制最大深度，需>=0，<0为不限制
+     * @param maxDepth 当deepFind为true时，限制最大深度，需&gt;=0，&lt;0为不限制
      * @return 文件(夹)信息列表，若没有这个目录、文件服务器连接失败、或其他异常则返回NULL
      */
     public abstract List<FileInfo<F>> list(String path, boolean deepFind, boolean flatPrint, int maxDepth);
